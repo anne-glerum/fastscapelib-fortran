@@ -1,5 +1,5 @@
 subroutine Strati (b,F,nx,ny,xl,yl,reflector,nreflector,ireflector,istep,fields,nfield,vex,dt, &
-  rec,sealevel)
+  rec,sealevel, ffoldername, kk, iistep)
 
   ! this routine tracks information (fields) on a set of reflectors (reflector)
   ! and outputs it to a set of VTKs.
@@ -11,6 +11,8 @@ subroutine Strati (b,F,nx,ny,xl,yl,reflector,nreflector,ireflector,istep,fields,
   double precision fields(nx*ny,nfield,nreflector), xl, yl,sealevel
   integer, dimension(nx*ny) :: rec
   character names(nfield)*30
+  integer :: kk, iistep
+  character(len=kk), intent(in) :: ffoldername
 
   double precision, dimension(:), allocatable :: s,dist
   character :: ref*3
@@ -67,7 +69,8 @@ subroutine Strati (b,F,nx,ny,xl,yl,reflector,nreflector,ireflector,istep,fields,
     write (ref,'(i3)') i
     if (i.lt.10) ref(1:2)='00'
     if (i.lt.100) ref(1:1)='0'
-    call VTK (reflector(:,i),'Horizon'//ref//'-',nfield,fields(:,1:nfield,i),names, nx,ny,dx,dy,istep,vex)
+    call VTK_strati (reflector(:,i),'Horizon'//ref//'-',nfield,fields(:,1:nfield,i),names, nx,ny,dx,dy,istep,vex,&
+                                                                       ffoldername,kk,iistep)
   enddo
 
   call distance_to_shore (b,dist,nx,ny,rec,xl,yl)
@@ -75,7 +78,8 @@ subroutine Strati (b,F,nx,ny,xl,yl,reflector,nreflector,ireflector,istep,fields,
 
   deallocate (s,dist)
 
-  if (ireflector.eq.nreflector) call VTK_CUBE (fields, nx, ny, nfield, nreflector, xl, yl, names)
+  if (ireflector.eq.nreflector) call VTK_CUBE_strati (fields, nx, ny, nfield, nreflector, xl, yl, names,&
+      ffoldername, kk, iistep)
 
   return
 

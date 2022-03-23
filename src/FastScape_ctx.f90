@@ -36,6 +36,9 @@ module FastScapeContext
   integer, dimension(:), allocatable :: mnrec,mstack
   integer, dimension(:,:), allocatable :: mrec
   double precision, dimension(:,:), allocatable :: mwrec,mlrec
+  character(:), allocatable :: ffoldername
+  integer :: kk, iistep
+
   contains
 
   subroutine Init()
@@ -803,7 +806,7 @@ module FastScapeContext
       fields=0.d0
 
       !call Strati (b, Fmix, nx, ny, xl, yl, reflector, nreflector, ireflector, 0, &
-      !fields, nfield, vexref, dt*nfreqref, stack, rec, length, sealevel)
+      !fields, nfield, vexref, dt*nfreqref, stack, rec, length, sealevel, ffoldername, kk, iistep)
 
       runStrati = .true.
 
