@@ -1,5 +1,5 @@
 subroutine Strati (b,F,nx,ny,xl,yl,reflector,nreflector,ireflector,istep,fields,nfield,vex,dt, &
-  rec,sealevel, ffoldername, kk, iistep)
+  rec,sealevel, ffoldername, kk, iistep, produce_output_now)
 
   ! this routine tracks information (fields) on a set of reflectors (reflector)
   ! and outputs it to a set of VTKs.
@@ -13,6 +13,7 @@ subroutine Strati (b,F,nx,ny,xl,yl,reflector,nreflector,ireflector,istep,fields,
   character names(nfield)*30
   integer :: kk, iistep
   character(len=kk), intent(in) :: ffoldername
+  logical :: produce_output_now
 
   double precision, dimension(:), allocatable :: s,dist
   character :: ref*3
@@ -69,18 +70,21 @@ subroutine Strati (b,F,nx,ny,xl,yl,reflector,nreflector,ireflector,istep,fields,
     write (ref,'(i3)') i
     if (i.lt.10) ref(1:2)='00'
     if (i.lt.100) ref(1:1)='0'
-    call VTK_strati (reflector(:,i),'Horizon'//ref//'-',nfield,fields(:,1:nfield,i),names, nx,ny,dx,dy,istep,vex,&
-                                                                       ffoldername,kk,iistep)
+    if (produce_output_now .eqv. .TRUE.) call VTK_strati (reflector(:,i),'Horizon'//ref//'-',nfield,fields(:,1:nfield,i),names, nx,&
+                                                          ny,dx,dy,&
+                                                          istep,vex,ffoldername,kk,iistep)
   enddo
 
   call distance_to_shore (b,dist,nx,ny,rec,xl,yl)
-  call VTK_filled_strati (b, nreflector, reflector, nfield, fields, names, nx, ny, dx, dy, istep, vex, dist,&
-                         ffoldername,kk,iistep)
+  if (produce_output_now .eqv. .TRUE.) call VTK_filled_strati (b, nreflector, reflector, nfield, fields, names, nx,&
+                                                               ny, dx, dy, istep,&
+                                                               vex, dist,ffoldername,kk,iistep)
 
   deallocate (s,dist)
 
-  if (ireflector.eq.nreflector) call VTK_CUBE_strati (fields, nx, ny, nfield, nreflector, xl, yl, names,&
-      ffoldername, kk, iistep)
+  if (ireflector.eq.nreflector .AND. produce_output_now .eqv. .TRUE.) call VTK_CUBE_strati (fields, nx, ny, nfield,&
+                                 nreflector, xl, yl,&
+                                 names,ffoldername, kk, iistep)
 
   return
 

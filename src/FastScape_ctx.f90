@@ -38,6 +38,7 @@ module FastScapeContext
   double precision, dimension(:,:), allocatable :: mwrec,mlrec
   character(:), allocatable :: ffoldername
   integer :: kk, iistep
+  logical :: produce_output_now
 
   contains
 
@@ -53,6 +54,7 @@ module FastScapeContext
     timeStrati = 0.
     timeMarine = 0.
     timeUplift = 0.
+    produce_output_now = .false.
 
   end subroutine Init
 
@@ -841,7 +843,8 @@ module FastScapeContext
       if (((step+1)/nfreq)*nfreq.eq.(step+1)) then
         if (((step+1)/nfreqref)*nfreqref.eq.(step+1)) ireflector = ireflector + 1
         call Strati (b, Fmix, nx, ny, xl, yl, reflector, nreflector, ireflector, step + 1, &
-        fields, nfield, vexref, dt*nfreqref, rec, sealevel, ffoldername, kk, iistep)
+        fields, nfield, vexref, dt*nfreqref, rec, sealevel, ffoldername, kk, iistep, & 
+        produce_output_now)
       endif
 
     end subroutine run_Strati
