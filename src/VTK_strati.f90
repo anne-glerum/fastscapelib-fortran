@@ -17,13 +17,13 @@ subroutine VTK_strati (h,name,nf,f,fname,nx,ny,dx,dy,istep,vex,ffoldername,kk,ii
 
     namel = sum(len_trim(fname(:)))
 
-    write (cstep,'(i7)') istep
-    if (istep.lt.10) cstep(1:6)='000000'
-    if (istep.lt.100) cstep(1:5)='00000'
-    if (istep.lt.1000) cstep(1:4)='0000'
-    if (istep.lt.10000) cstep(1:3)='000'
-    if (istep.lt.100000) cstep(1:2)='00'
-    if (istep.lt.1000000) cstep(1:1)='0'
+    write (cstep,'(i7)') iistep
+    if (iistep.lt.10) cstep(1:6)='000000'
+    if (iistep.lt.100) cstep(1:5)='00000'
+    if (iistep.lt.1000) cstep(1:4)='0000'
+    if (iistep.lt.10000) cstep(1:3)='000'
+    if (iistep.lt.100000) cstep(1:2)='00'
+    if (iistep.lt.1000000) cstep(1:1)='0'
 
     !if (nf.gt.10) stop 'too many fields to be displayed by VTK, maximum is 10'
     !  do i=1,nf
@@ -162,13 +162,13 @@ subroutine VTK_filled_strati (basement, nreflector, reflector, nfield, fields, n
 
   write (*,*) 'Name vtk filled stratigraphy: ',ffoldername
 
-  write (cstep,'(i7)') istep
-  if (istep.lt.10) cstep(1:6)='000000'
-  if (istep.lt.100) cstep(1:5)='00000'
-  if (istep.lt.1000) cstep(1:4)='0000'
-  if (istep.lt.10000) cstep(1:3)='000'
-  if (istep.lt.100000) cstep(1:2)='00'
-  if (istep.lt.1000000) cstep(1:1)='0'
+  write (cstep,'(i7)') iistep
+  if (iistep.lt.10) cstep(1:6)='000000'
+  if (iistep.lt.100) cstep(1:5)='00000'
+  if (iistep.lt.1000) cstep(1:4)='0000'
+  if (iistep.lt.10000) cstep(1:3)='000'
+  if (iistep.lt.100000) cstep(1:2)='00'
+  if (iistep.lt.1000000) cstep(1:1)='0'
 
   iunit=30
 
