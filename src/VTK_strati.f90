@@ -69,7 +69,7 @@ subroutine VTK_strati (h,name,nf,f,fname,nx,ny,dx,dy,istep,vex,ffoldername,kk,ii
     +nf*(npart1+npart2+4*nn)+namel,convert='big_endian')
     write (77,rec=1) &
     header(1:nheader), &
-    ((sngl(dx*(i-1)),sngl(dy*(j-1)),sngl(h(i,j)*vex),i=1,nx),j=1,ny), &
+    ((sngl(dx*(i-1)),sngl(dy*(j-1)),sngl(h(i,j)*abs(vex)),i=1,nx),j=1,ny), &
     footer(1:nfooter), &
     part1(1:npart1)//'H'//part2(1:npart2),sngl(h), &
     (part1(1:npart1)//trim(fname(k))//part2(1:npart2),sngl(f(:,:,k)),k=1,nf)
@@ -195,15 +195,14 @@ name='Strati-'
   write(iunit,'(a)')'ASCII'
   write(iunit,'(a)')'DATASET UNSTRUCTURED_GRID'
   write(iunit,'(a7,i10,a6)')'POINTS ',nnode,' float'
-
   do k = 0, nreflector
     do j = 1, ny
       do i = 1, nx
         ij = (j - 1)*nx + i
         if (k.eq.0) then
-          write(iunit,'(3f16.4)') dx*(i - 1), dy*(j - 1), basement(ij)*vex
+          write(iunit,'(3f16.4)') dx*(i - 1), dy*(j - 1), basement(ij)*abs(vex)
         else
-          write(iunit,'(3f16.4)') dx*(i - 1), dy*(j - 1), reflector(ij, k)*vex
+          write(iunit,'(3f16.4)') dx*(i - 1), dy*(j - 1), reflector(ij, k)*abs(vex)
         endif
       enddo
     enddo
@@ -247,16 +246,16 @@ name='Strati-'
           ij = (j - 1)*nx + i
           if (k.eq.0) then
             if (l.eq.1.or.l.eq.2) then
-              write(iunit,'(e10.4)') fields(ij,l,k+1)
+              write(iunit,'(e10.4)') min(max(1e-30,fields(ij,l,k+1)),1e30)
             elseif (l.eq.7) then
-              write(iunit,'(e10.4)') distb(ij)
+              write(iunit,'(e10.4)') min(max(1e-30,distb(ij)),1e30)
             elseif (l.eq.9) then
-              write(iunit,'(e10.4)') 2*fields(ij,l,k+1)-fields(ij,l,k+2)
+              write(iunit,'(e10.4)') min(max(1e-30,2.*fields(ij,l,k+1)-fields(ij,l,k+2)),1e30)
             else
               write(iunit,'(e10.4)') 0.
             endif
           else
-            write(iunit,'(e10.4)') fields(ij,l,k)
+             write(iunit,'(e10.4)') min(max(1e-30,fields(ij,l,k)),1e30)
           endif
         enddo
       enddo
