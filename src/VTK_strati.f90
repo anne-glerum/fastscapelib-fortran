@@ -156,6 +156,7 @@ subroutine VTK_filled_strati (basement, nreflector, reflector, nfield, fields, n
   double precision fields(nx*ny,nfield,nreflector)
   character*30 names(nfield)
 
+  integer i,j,k,ij,l
   character cstep*7, name*128
   integer iunit, nnode, nelem
   character(len=kk), intent(in) :: ffoldername
