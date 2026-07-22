@@ -5,7 +5,11 @@ module FastScapeContext
   ! see API for name of routines and externally accessible variables
 
   implicit none
-
+  ! Advection-method identifiers
+  integer, parameter :: ADVECTION_ORIGINAL = 1
+  integer, parameter :: ADVECTION_TVD      = 2
+  ! Default method used unless the user changes it
+  integer :: advection_scheme = ADVECTION_ORIGINAL
   integer :: nx, ny, nn, nstack
   integer :: bounds_ibc
   integer :: bounds_i1, bounds_i2, bounds_j1, bounds_j2

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 
 set(FASTSCAPELIB_EXAMPLES_SRC_FILES
+  RotateMountain.f90
+  AdvectMountain.f90
   DippingDyke.f90
   Fan.f90
   Margin.f90
