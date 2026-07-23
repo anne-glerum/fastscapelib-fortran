@@ -50,11 +50,14 @@ jobs:
     - uses: actions/checkout@v7
     - name: compile
       run: |
+        pwd
+        ls
         mkdir build_fastscape
         cd build_fastscape
         /opt/cmake-3.26.4-linux-x86_64/bin/cmake -DBUILD_FASTSCAPELIB_SHARED=ON ..
         make
         cd /opt
+        pwd
         git clone https://github.com/geodynamics/aspect.git
         cd aspect
         mkdir build
@@ -68,7 +71,7 @@ jobs:
         -D ASPECT_PRECOMPILE_HEADERS=ON \
         -D ASPECT_UNITY_BUILD=ON \
         -D ASPECT_WITH_FASTSCAPE='${{ matrix.build-with-fastscape }}' \
-        -D FASTSCAPE_DIR="/opt/build_fastscape/" \
+        -D FASTSCAPE_DIR="/__w/fastscapelib-fortran/fastscapelib-fortran/build_fastscape" \
         -D ASPECT_RUN_ALL_TESTS='${{ matrix.run-tests }}' \
         -D ASPECT_COMPARE_TEST_RESULTS='${{ matrix.compare-tests }}' \
         -D ASPECT_USE_TPETRA='${{ matrix.use-tpetra }}' \
