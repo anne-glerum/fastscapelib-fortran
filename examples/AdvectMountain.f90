@@ -60,8 +60,8 @@ program AdvectMountain
 
   ! Constant velocity fields
   u  = 0.5d-3 ! uplift
-  ux = 5d-3.  ! x-direction advection
-  uy = 0.d0.  ! y-direction advection
+  ux = 5d-3  ! x-direction advection
+  uy = 0.d0  ! y-direction advection
 
   ! Boundary conditions
   u(1:nx)=0.d0
