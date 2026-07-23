@@ -30,7 +30,9 @@ subroutine Advect_TVD()
   call tvd_advect(b2,    vx2, vy2, dx, dy, dt)
   call tvd_advect(etot2, vx2, vy2, dx, dy, dt)
 
-  b = min(b, h)
+  b = min(b, h) ! Fastscape advects both basement (b) as well as topography (h).
+                ! It ensures that basement is never greater than topography.
+                ! Similar condition is used in the original scheme.
 
 contains
 
@@ -60,6 +62,11 @@ subroutine tvd_x(field, velx, dx, dtloc)
   integer :: i, j
   double precision :: vface, flo, fhi, den, r, phi
   double precision, parameter :: eps = 1.d-14
+  ! vface - velocity at the interface,
+  ! flo - lower order flux, fhi - higher order flux,
+  ! den - difference in elevation between (i+1)th and ith points needed to calculate the smoothness index,
+  ! r - smoothness index which is used to calculate the flux limiter,
+  ! phi - van Leer flux limiter,
 
   double precision, allocatable :: flux(:,:), field_new(:,:)
 
@@ -73,10 +80,10 @@ subroutine tvd_x(field, velx, dx, dtloc)
       vface = 0.5d0 * (velx(i,j) + velx(i+1,j))
 
       ! Godunov / first-order upwind flux.
-      flo = max(vface, 0.d0) * field(i,j) + &
+      flo = max(vface, 0.d0) * field(i,j) + & 
             min(vface, 0.d0) * field(i+1,j)
 
-      den = field(i+1,j) - field(i,j)
+      den = field(i+1,j) - field(i,j) 
 
       ! Use high order only where both required neighbouring slopes exist.
       phi = 0.d0
@@ -107,7 +114,8 @@ subroutine tvd_x(field, velx, dx, dtloc)
 
   field_new = field
 
-  ! Keep field(1,:) and field(nx,:) unchanged, as in Advect_Original.
+  ! Keep field(1,:) and field(nx,:) unchanged, as in Advect_Original to maintain Dirichlet BC. 
+  ! Boundary nodes are kept at fixed value during advection.
   do j = 1, ny
     do i = 2, nx-1
       field_new(i,j) = field(i,j) - &
@@ -163,7 +171,8 @@ subroutine tvd_y(field, vely, dy, dtloc)
         phi = vanleer(r)
 
       end if
-
+      
+      ! Lax-Wendroff flux.
       fhi = 0.5d0 * vface * (field(i,j) + field(i,j+1)) - &
             0.5d0 * vface**2 * (dtloc / dy) * den
 
