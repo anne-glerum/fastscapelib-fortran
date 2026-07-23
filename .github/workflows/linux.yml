@@ -82,12 +82,12 @@ jobs:
     - name: prebuild tests
       run: |
         # prebuilding tests...
-        cd build/tests
+        cd /opt/aspect/build/tests
         ninja -k 0 tests || true
     - name: report test results
       continue-on-error: true
       run: |
-        cd build
+        cd /opt/aspect/build
         ctest \
         --no-compress-output \
         --test-action Test \
@@ -95,21 +95,21 @@ jobs:
     - name: write test results
       continue-on-error: true
       run: |
-        cd build
+        cd /opt/aspect/build
         # TODO: temporary fix for a git incompability.
         # Can likely be removed when the tester image runs on Ubuntu 22.04
-        /usr/bin/git config --system --add safe.directory /__w/aspect/aspect
+        /usr/bin/git config --system --add safe.directory /opt/aspect/
         ninja generate_reference_output
         git diff ../tests > ${{ matrix.result-file }}
     - name: archive test results
       uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.result-file }}
-        path: build/${{ matrix.result-file }}
+        path: /opt/aspect/build/${{ matrix.result-file }}
         archive: false
     - name: check test results
       run: |
-        if [ -f build/test_run_failed ] || [ -s build/${{ matrix.result-file}} ]; then
+        if [ -f /opt/aspect/build/test_run_failed ] || [ -s /opt/aspect/build/${{ matrix.result-file}} ]; then
           exit 1
         else
           exit 0
