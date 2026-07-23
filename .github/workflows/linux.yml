@@ -50,14 +50,11 @@ jobs:
     - uses: actions/checkout@v7
     - name: compile
       run: |
-        pwd
-        ls
         mkdir build_fastscape
         cd build_fastscape
         /opt/cmake-3.26.4-linux-x86_64/bin/cmake -DBUILD_FASTSCAPELIB_SHARED=ON ..
         make
         cd /opt
-        pwd
         git clone https://github.com/geodynamics/aspect.git
         cd aspect
         mkdir build
