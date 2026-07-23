@@ -157,6 +157,30 @@ end subroutine FastScape_Init
 
 !--------------------------------------------------------------------------
 
+!--------------------------------------------------------------------------
+
+subroutine FastScape_Set_Advection_Scheme(scheme)
+
+  use FastScapeContext, only: advection_scheme, ADVECTION_ORIGINAL, ADVECTION_TVD
+  implicit none
+
+  integer, intent(in) :: scheme
+
+  select case (scheme)
+
+  case (ADVECTION_ORIGINAL, ADVECTION_TVD)
+    advection_scheme = scheme
+
+  case default
+    print *, 'FastScape_Set_Advection_Scheme: invalid scheme = ', scheme
+    stop
+
+  end select
+
+end subroutine FastScape_Set_Advection_Scheme
+
+!--------------------------------------------------------------------------
+
 subroutine FastScape_Setup()
 
   use FastScapeContext
