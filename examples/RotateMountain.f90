@@ -1,5 +1,13 @@
-program Rotation
-! test advection with rotation. Initially build a steady state topography and then rotate without doing anything else
+program RotateMountain
+
+  ! Test for different advection schemes (Original vs FVM-TVD)
+  ! Initially build a steady state topography till 10 Myr and then rotate it completely 
+  ! by 360 degrees without any uplift or erosion 
+  ! 1st phase - build topography with constant uplift of 0.5 mm/yr and linear erosion law (m=0.45, n=1)
+  ! till it reaches equilibrium
+  ! 2nd phase - stop uplift and erosin and rotate the topography by 360 degrees to check the impact of advection
+  ! Advection scheme set by: FastScape_Set_Advection_Scheme(n)
+  ! n = 1 - Original implicit scheme; n =2 - FVM-TVD scheme
   implicit none
 
   integer :: nx, ny, istep, i, j, idx
@@ -22,32 +30,34 @@ program Rotation
   double precision, dimension(:), allocatable :: ux, uy
   double precision, dimension(:), allocatable :: kf, kd
 
-! Initialize FastScape
-
+  ! Initialize FastScape
   call FastScape_Init()
+
+  ! Call advection scheme
   call FastScape_Set_Advection_Scheme(2) ! 1 - Original scheme; 2 - FVM-TVD scheme
 
+  ! Set grid size
   nx = 501
   ny = 501
-
   call FastScape_Set_NX_NY(nx,ny)
+
+  ! Allocate memory
   call FastScape_Setup()
 
+  ! Set model dimensions
   xl = 500.d3
   yl = 500.d3
-
   call FastScape_Set_XL_YL(xl,yl)
-
+  
+  ! Calculate cell size
   dx = xl/dble(nx-1)
   dy = yl/dble(ny-1)
 
-! Initial timestep
-
+  ! Set time step
   dt = 2.d4
   call FastScape_Set_DT(dt)
 
-! Initial topography
-
+  ! Set same random topography every model run
   allocate(h(nx*ny))
 
   call random_seed(size=nseed)
@@ -64,25 +74,19 @@ program Rotation
 
   call FastScape_Init_H(h)
 
-! Erosion parameters
-
+  ! Set erosion parameters
   allocate(kf(nx*ny),kd(nx*ny))
-
   kf = 1.d-5
   kd = 1.d-3
-
   kfsed = -1.d0
   kdsed = -1.d0
-
   m = 0.45d0
   n = 1.d0
   g = 0.01d0
-
   call FastScape_Set_Erosional_Parameters( &
        kf,kfsed,m,n,kd,kdsed,g,g,-2.d0)
 
-! Uplift and velocity arrays
-
+  ! Uplift and velocity arrays
   allocate(u(nx*ny))
   allocate(ux(nx*ny))
   allocate(uy(nx*ny))
@@ -91,8 +95,7 @@ program Rotation
   ux = 0.d0
   uy = 0.d0
 
-! Boundary conditions
-
+  ! Boundary conditions
   u(1:nx)=0.d0
   u(nx:nx*ny:nx)=0.d0
   u(1:nx*ny:nx)=0.d0
@@ -103,8 +106,7 @@ program Rotation
 
   call FastScape_Set_BC(1010)
 
-! PHASE 1 : Build mountain
-
+  ! PHASE 1 : Build mountain
   nbuild = 500
 
   call FastScape_Get_Step(istep)
@@ -122,8 +124,7 @@ program Rotation
 
   enddo
 
-! PHASE 2 : Freeze erosion and rotate
-
+  ! PHASE 2 : Freeze erosion and rotate
   u = 0.d0
   call FastScape_Set_U(u)
 
@@ -134,8 +135,7 @@ program Rotation
   call FastScape_Set_Erosional_Parameters( &
        kf,kfsed,m,n,kd,kdsed,g,g,-2.d0)
 
-! Rotation velocity field
-
+  ! Rotation velocity field
   pi = acos(-1.d0)
 
   xc = xl/2.d0
@@ -163,22 +163,20 @@ program Rotation
 
   call FastScape_Set_V(ux,uy)
 
-! CFL timestep
-
+  ! CFL timestep
   rmax = sqrt((xl/2.d0)**2 + (yl/2.d0)**2)
 
   vmax = omega*rmax
 
-  dt_rotate = 0.9d0*cfl*min(dx,dy)/vmax
+  dt_rotate = cfl*min(dx,dy)/vmax
 
   call FastScape_Set_DT(dt_rotate)
 
-  nrotate = nint(0.25d0*rotation_period/dt_rotate)
+  nrotate = nint(rotation_period/dt_rotate)
 
   target_step = istep + nrotate
 
-! Rotate landscape
-
+  ! Rotate landscape
   do while (istep < target_step)
 
      call FastScape_Execute_Step()
@@ -193,8 +191,7 @@ program Rotation
 
   enddo
 
-! Finish
-
+  ! End FastScape run
   call FastScape_Debug()
 
   call FastScape_Destroy()
@@ -206,4 +203,4 @@ program Rotation
   deallocate(kf)
   deallocate(kd)
 
-end program Rotation
+end program RotateMountain
