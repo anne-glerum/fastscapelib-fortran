@@ -6,13 +6,16 @@
 [![Build Doc](https://github.com/fastscape-lem/fastscapelib-fortran/workflows/deploy-doc/badge.svg)](https://github.com/fastscape-lem/fastscapelib-fortran/actions)
 [![DOI](https://zenodo.org/badge/167184498.svg)](https://zenodo.org/badge/latestdoi/167184498)
 
-**PLEASE NOTE: this repository is in maintenance-only mode, further development (new features and reworked API) is happening in the https://github.com/fastscape-lem/fastscapelib repository.**
+**PLEASE NOTE: this repository originates from https://github.com/fastscape-lem/fastscapelib-fortran, a repository in maintenance-only mode. Further development of that original repository (new features and reworked API) is happening in the https://github.com/fastscape-lem/fastscapelib repository. This repository continues development in the fortran version specifically for use with the geodynamic software ASPECT (https://github.com/geodynamics/aspect)**
 
 A Fortran (+ Python bindings) library of efficient algorithms for
 landscape evolution modeling.
 
 See the [documentation](https://fastscape-lem.github.io/fastscapelib-fortran/)
 online for more details on how to build, install and use the library.
+
+## Version
+This repository builds on version 2.9.0dev of https://github.com/fastscape-lem/fastscapelib-fortran
 
 ## License
 
@@ -25,7 +28,9 @@ Some CMake modules included here have been copied from
 
 This project is supported by the
 [Earth Surface Process Modelling](http://www.gfz-potsdam.de/en/section/earth-surface-process-modelling/)
-group of the GFZ Helmholtz Centre Potsdam.
+group of the GFZ Helmholtz Centre for Geosciences.
+The [Geodynamic modeling group](https://www.gfz.de/en/section/geodynamic-modeling/overview) at GFZ Helmtholz Center for Geosciences further develops Fastscape for
+use with ASPECT.
 
 ## Citation
 
