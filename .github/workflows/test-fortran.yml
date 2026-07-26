@@ -3,10 +3,10 @@ name: test-fortran
 on:
   push:
     branches:
-    - 'master'
+    - 'aspect_tester'
   pull_request:
     branches:
-    - 'master'
+    - 'aspect_tester'
 
 env:
   HOMEBREW_NO_ANALYTICS: "ON" # Make Homebrew installation a little quicker
@@ -52,7 +52,16 @@ jobs:
       - name: Run Fan example
         run: |
           cd ${BUILD_DIR}/examples
+          ./AdvectMountain
+          ./DippingDyke
           ./Fan
+          ./Margin
+          ./Mountain
+          ./RotateMountain
+          ./Strati_test
+          ./flexure_test
+          
+          
 
   mingw-build:
     name: mingw (windows-latest)
@@ -84,4 +93,11 @@ jobs:
     - name: Run Fan example
       run: |
         cd ${BUILD_DIR}/examples
+        ./AdvectMountain.exe
+        ./DippingDyke.exe
         ./Fan.exe
+        ./Margin.exe
+        ./Mountain.exe
+        ./RotateMountain.exe
+        ./Strati_test.exe
+        ./flexure_test.exe
