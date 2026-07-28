@@ -49,7 +49,7 @@ jobs:
       - name: Build project
         run: cmake --build ${BUILD_DIR}
 
-      - name: Run Fan example
+      - name: Run examples
         run: |
           cd ${BUILD_DIR}/examples
           ./AdvectMountain
