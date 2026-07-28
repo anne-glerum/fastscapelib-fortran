@@ -40,6 +40,17 @@ module FastScapeContext
   integer, dimension(:), allocatable :: mnrec,mstack
   integer, dimension(:,:), allocatable :: mrec
   double precision, dimension(:,:), allocatable :: mwrec,mlrec
+  integer :: ncomp = 0
+  ! Initial composition ID at every cell: 1 ... ncomp
+  integer, dimension(:), allocatable :: composition
+  ! Temporary sediment flux for one timestep, units m3/yr
+  double precision, dimension(:,:), allocatable :: prov_flux
+  ! Cumulative delivered sediment at base nodes, units m3
+  double precision, dimension(:,:), allocatable :: prov_delivered
+  ! Cumulative sediment deposited in each grid cell, units m3
+  double precision, dimension(:,:), allocatable :: prov_deposited
+  ! Number of currently eroding donor cells reaching each node
+  double precision, dimension(:,:), allocatable :: donor_count
   contains
 
   subroutine Init()
@@ -47,6 +58,7 @@ module FastScapeContext
     nx=0
     ny=0
     step=0
+    ncomp = 0
     setup_has_been_run = .false.
     timeSPL = 0.
     timeAdvect = 0.
@@ -76,6 +88,20 @@ module FastScapeContext
     allocate (p_mfd_exp(nn))
     allocate (length(nn),a(nn),erate(nn),etot(nn),b(nn),Sedflux(nn),Fmix(nn),kf(nn),kd(nn))
     allocate (lake_depth(nn),hwater(nn),mrec(8,nn),mnrec(nn),mwrec(8,nn),mlrec(8,nn),mstack(nn))
+    ! Provenance arrays: only enabled when ncomp was set before Setup.
+    if (ncomp .gt. 0) then
+      allocate(composition(nn))
+      allocate(prov_flux(ncomp,nn))
+      allocate(prov_delivered(ncomp,nn))
+      allocate(prov_deposited(ncomp,nn))
+      allocate(donor_count(ncomp,nn))
+
+      composition = 1
+      prov_flux = 0.d0
+      prov_delivered = 0.d0
+      prov_deposited = 0.d0
+      donor_count = 0.d0
+    endif
 
     h2(1:nx,1:ny) => h
     b2(1:nx,1:ny) => b
@@ -123,6 +149,50 @@ module FastScapeContext
 
   !---------------------------------------------------------------
 
+  subroutine SetNComposition(ncompp)
+
+    integer, intent(in) :: ncompp
+
+    if (setup_has_been_run) then
+      stop 'SetNComposition - call this before FastScape_Setup'
+    endif
+
+    if (ncompp .lt. 1) then
+      stop 'SetNComposition - ncomp must be at least 1'
+    endif
+
+    ncomp = ncompp
+
+  end subroutine SetNComposition
+
+  !----------------------------------------------------------------
+
+  subroutine SetComposition(compp)
+
+    implicit none
+
+    integer, intent(in) :: compp(*)
+
+    if (.not.setup_has_been_run) then
+      stop 'SetComposition - run FastScape_Setup first'
+    endif
+
+    if (ncomp .eq. 0) then
+      stop 'SetComposition - call SetNComposition before Setup'
+    endif
+
+    if (minval(compp(1:nn)) .lt. 1 .or. maxval(compp(1:nn)) .gt. ncomp) then
+      stop 'SetComposition - composition IDs must be between 1 and ncomp'
+    endif
+
+    composition(1:nn) = compp(1:nn)
+
+    return
+
+  end subroutine SetComposition
+
+  !---------------------------------------------------------------
+
   subroutine Destroy()
 
     if (allocated(h)) deallocate(h)
@@ -157,6 +227,11 @@ module FastScapeContext
     if (allocated(g)) deallocate(g)
     if (allocated(p_mfd_exp)) deallocate(p_mfd_exp)
     if (allocated(bounds_bc)) deallocate(bounds_bc)
+    if (allocated(composition)) deallocate(composition)
+    if (allocated(prov_flux)) deallocate(prov_flux)
+    if (allocated(prov_delivered)) deallocate(prov_delivered)
+    if (allocated(prov_deposited)) deallocate(prov_deposited)
+    if (allocated(donor_count)) deallocate(donor_count)
 
     return
 
@@ -342,6 +417,58 @@ module FastScapeContext
     return
 
   end subroutine CopyLakeDepth
+
+  !---------------------------------------------------------------
+
+  subroutine CopyProvenanceDelivered(provp)
+
+    double precision, intent(out) :: provp(*)
+
+    if (.not.setup_has_been_run) then
+      stop 'CopyProvenanceDelivered - run FastScape_Setup first'
+    endif
+
+    if (ncomp .eq. 0) then
+      stop 'CopyProvenanceDelivered - provenance is not enabled'
+    endif
+
+    provp(1:ncomp*nn) = reshape(prov_delivered, (/ncomp*nn/))
+
+    return
+
+  end subroutine CopyProvenanceDelivered
+
+  !---------------------------------------------------------------
+
+  subroutine CopyProvenanceDeposited(provp)
+
+    double precision, intent(out) :: provp(*)
+
+    if (.not.setup_has_been_run) then
+      stop 'CopyProvenanceDeposited - run FastScape_Setup first'
+    endif
+
+    provp(1:ncomp*nn) = reshape(prov_deposited, (/ncomp*nn/))
+
+    return
+
+  end subroutine CopyProvenanceDeposited
+
+  !---------------------------------------------------------------
+
+  subroutine CopyDonorCount(countp)
+
+    double precision, intent(out) :: countp(*)
+
+    if (.not.setup_has_been_run) then
+      stop 'CopyDonorCount - run FastScape_Setup first'
+    endif
+
+    countp(1:ncomp*nn) = reshape(donor_count, (/ncomp*nn/))
+
+    return
+
+  end subroutine CopyDonorCount
 
   !---------------------------------------------------------------
 

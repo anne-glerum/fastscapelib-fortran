@@ -120,6 +120,92 @@ end subroutine FlowAccumulation
 
 !--------------------------------------------------------------------------------------------
 
+subroutine ProvenanceRouting ()
+
+  use FastScapeContext
+
+  implicit none
+
+  integer :: ij, ijk, ijr, k, c
+  double precision :: dx, dy, cellarea
+  double precision :: erosion_supply, deposition
+  double precision :: total_flux, deposited_fraction
+
+  if (ncomp .eq. 0) return
+
+  dx = xl/(nx-1)
+  dy = yl/(ny-1)
+  cellarea = dx*dy
+
+  ! These arrays represent the current timestep only.
+  prov_flux = 0.d0
+  donor_count = 0.d0
+
+  ! mstack processes all donors before their receivers.
+  do ij = 1, nn
+
+    ijk = mstack(ij)
+    c = composition(ijk)
+
+    ! Local sediment supply from erosion.
+    ! erate > 0 means erosion, in m/yr.
+    ! erosion_supply is in m3/yr.
+    erosion_supply = max(erate(ijk),0.d0)*cellarea
+
+    prov_flux(c,ijk) = prov_flux(c,ijk) + erosion_supply
+
+    ! Count cells that are actively contributing sediment.
+    if (erosion_supply .gt. 0.d0) then
+      donor_count(c,ijk) = donor_count(c,ijk) + 1.d0
+    endif
+
+    ! Local deposition.
+    ! erate < 0 means deposition. Remove that amount
+    ! from the arriving provenance mixture.
+    deposition = max(-erate(ijk),0.d0)*cellarea
+    total_flux = sum(prov_flux(:,ijk))
+
+    if (deposition .gt. 0.d0 .and. total_flux .gt. 0.d0) then
+
+      deposited_fraction = min(deposition,total_flux)/total_flux
+
+      ! Save cumulative deposition, m3.
+      prov_deposited(:,ijk) = prov_deposited(:,ijk) + &
+        deposited_fraction*prov_flux(:,ijk)*dt
+
+      ! Material remaining in transport.
+      prov_flux(:,ijk) = (1.d0-deposited_fraction)*prov_flux(:,ijk)
+
+    endif
+
+    ! Either collect at a base-level node or route
+    ! to all MFD receivers.
+    if (bounds_bc(ijk)) then
+
+      ! Flux rate m3/yr converted to volume m3.
+      prov_delivered(:,ijk) = prov_delivered(:,ijk) + &
+        prov_flux(:,ijk)*dt
+
+    else
+
+      do k = 1, mnrec(ijk)
+        ijr = mrec(k,ijk)
+
+        prov_flux(:,ijr) = prov_flux(:,ijr) + &
+          mwrec(k,ijk)*prov_flux(:,ijk)
+
+        donor_count(:,ijr) = donor_count(:,ijr) + &
+          mwrec(k,ijk)*donor_count(:,ijk)
+      enddo
+
+    endif
+
+  enddo
+
+end subroutine ProvenanceRouting
+
+!--------------------------------------------------------------------------------------------
+
 subroutine FlowAccumulationSingleFlowDirection ()
 
   use FastScapeContext
@@ -141,6 +227,64 @@ subroutine FlowAccumulationSingleFlowDirection ()
   return
 
 end subroutine FlowAccumulationSingleFlowDirection
+
+!--------------------------------------------------------------------------------------------
+
+subroutine ProvenanceRoutingSingleFlowDirection ()
+
+  use FastScapeContext
+
+  implicit none
+
+  integer :: ij, ijk, ijr, c
+  double precision :: dx, dy, cellarea
+  double precision :: erosion_supply, deposition
+  double precision :: total_flux, deposited_fraction
+
+  if (ncomp .eq. 0) return
+
+  dx = xl/(nx-1)
+  dy = yl/(ny-1)
+  cellarea = dx*dy
+
+  prov_flux = 0.d0
+  donor_count = 0.d0
+
+  ! For SFD, stack(nn:1:-1) is donor -> receiver order.
+  do ij = nn, 1, -1
+
+    ijk = stack(ij)
+    c = composition(ijk)
+
+    erosion_supply = max(erate(ijk),0.d0)*cellarea
+    prov_flux(c,ijk) = prov_flux(c,ijk) + erosion_supply
+
+    if (erosion_supply .gt. 0.d0) then
+      donor_count(c,ijk) = donor_count(c,ijk) + 1.d0
+    endif
+
+    deposition = max(-erate(ijk),0.d0)*cellarea
+    total_flux = sum(prov_flux(:,ijk))
+
+    if (deposition .gt. 0.d0 .and. total_flux .gt. 0.d0) then
+      deposited_fraction = min(deposition,total_flux)/total_flux
+      prov_deposited(:,ijk) = prov_deposited(:,ijk) + &
+        deposited_fraction*prov_flux(:,ijk)*dt
+      prov_flux(:,ijk) = (1.d0-deposited_fraction)*prov_flux(:,ijk)
+    endif
+
+    if (bounds_bc(ijk)) then
+      prov_delivered(:,ijk) = prov_delivered(:,ijk) + &
+        prov_flux(:,ijk)*dt
+    else
+      ijr = rec(ijk)
+      prov_flux(:,ijr) = prov_flux(:,ijr) + prov_flux(:,ijk)
+      donor_count(:,ijr) = donor_count(:,ijr) + donor_count(:,ijk)
+    endif
+
+  enddo
+
+end subroutine ProvenanceRoutingSingleFlowDirection
 
 !--------------------------------------------------------------------------------------------
 
