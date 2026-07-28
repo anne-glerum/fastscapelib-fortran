@@ -16,7 +16,7 @@ subroutine Marine()
   integer, dimension(:,:), allocatable :: mmrec
   double precision, dimension(:,:), allocatable :: mmwrec,mmlrec
   double precision shelfslope,ratio1,ratio2,dx,dy
-  integer ij,ijr,ijk,k,istep,i,j
+  integer ij,ijr,ijk,k
 
   allocate (flux(nn),shelfdepth(nn),ht(nn),Fs(nn),dh(nn),dh1(nn),dh2(nn),Fmixt(nn),COTflag(nn))
   allocate (dhs(nn),dhs1(nn),F1(nn),F2(nn),zi(nn),zo(nn))
