@@ -10,12 +10,32 @@
 ! FastScape_Init ()
 ! Must be called before any other routine to initialize nx, ny and step
 
+! FastScape_Set_NComposition (ncomp)
+! Enables sediment-provenance tracking and sets the number of material
+! compositions. This routine must be called after FastScape_Set_NX_NY and
+! before FastScape_Setup.
+! ncomp is an integer greater than zero.
+!
+! FastScape_Set_Composition (composition)
+! Sets the initial material-composition ID at every grid cell.
+! composition is an integer array of size nn (= nx*ny).
+! Each value must be between 1 and ncomp.
+! This routine must be called after FastScape_Setup.
+!
+! Provenance routing is executed automatically by FastScape_Execute_Step
+! After stream-power erosion/deposition has calculated erate.
+! For each eroding cell, sediment supply is:
+! max(erate,0) * cell_area
+! and is routed downstream according to the FastScape flow-routing stack.
+
 ! FastScape_SetUp ()
 ! Must be called to allocate memory for all internal arrays
 ! can only be called once FastScapeSetNXNY has been used to set up nx and ny
 
 ! FastScape_Execute_Step ()
-! Executes a single step solving the SPL and diffusion equations
+! Executes one timestep of the active FastScape processes.
+! When stream-power erosion is active, it also routes provenance using the
+! erosion/deposition rate calculated during that timestep.
 
 ! FastScape_Destroy ()
 ! Must be called to deallocate memory
@@ -114,6 +134,27 @@
 ! returns the current erosion rate (in m/yr)
 ! as an array of dimension nn(=nx*ny)
 ! erate is double precision of size nn
+
+! FastScape_Copy_Provenance_Delivered (provenance)
+! Returns cumulative sediment volume delivered to every fixed-base-level node,
+! separated by source composition.
+! provenance is a double-precision array of size (ncomp,nn).
+! provenance(c,i) is the cumulative volume (m3) of composition c delivered
+! to grid cell i since the simulation began.
+!
+! FastScape_Copy_Provenance_Deposited (provenance)
+! Returns cumulative sediment volume deposited at every grid cell, separated
+! by source composition.
+! provenance is a double-precision array of size (ncomp,nn).
+! provenance(c,i) is the cumulative deposited volume (m3) of composition c
+! at grid cell i since the simulation began.
+!
+! FastScape_Copy_Donor_Count (count)
+! Returns the number of actively eroding donor cells draining toward every
+! grid cell during the latest timestep, separated by source composition.
+! count is a double-precision array of size (ncomp,nn).
+! With multiple-flow-direction routing, donor counts can be fractional because
+! sediment from one cell can be distributed to multiple receivers.
 
 ! FastScape_Get_Sizes (nx,ny)
 ! returns the value of the grid size
@@ -250,10 +291,12 @@ subroutine FastScape_Execute_Step()
       call FlowRoutingSingleFlowDirection ()
       call FlowAccumulationSingleFlowDirection ()
       call StreamPowerLawSingleFlowDirection ()
+      call ProvenanceRoutingSingleFlowDirection ()
     else
       call FlowRouting ()
       call FlowAccumulation ()
       call StreamPowerLaw ()
+      call ProvenanceRouting ()
     endif
     call cpu_time (time_out)
     timeSPL = timeSPL + time_out-time_in
@@ -829,3 +872,79 @@ subroutine FastScape_Get_GSSIterations (nGSSp)
   return
 
 end subroutine FastScape_Get_GSSIterations
+
+!--------------------------------------------------------------------------
+
+subroutine FastScape_Set_NComposition(ncompp)
+
+  use FastScapeContext
+
+  implicit none
+
+  integer, intent(in) :: ncompp
+
+  call SetNComposition(ncompp)
+
+end subroutine FastScape_Set_NComposition
+
+!--------------------------------------------------------------------------
+
+subroutine FastScape_Set_Composition(compp)
+
+  use FastScapeContext
+
+  implicit none
+
+  integer, intent(in) :: compp(nn)
+
+  call SetComposition(compp)
+
+end subroutine FastScape_Set_Composition
+
+!--------------------------------------------------------------------------
+
+subroutine FastScape_Copy_Provenance_Delivered(provp)
+
+  use FastScapeContext
+
+  implicit none
+
+  double precision, intent(out) :: provp(*)
+
+  call CopyProvenanceDelivered(provp)
+
+  return
+
+end subroutine FastScape_Copy_Provenance_Delivered
+
+!--------------------------------------------------------------------------
+
+subroutine FastScape_Copy_Provenance_Deposited(provp)
+
+  use FastScapeContext
+
+  implicit none
+
+  double precision, intent(out) :: provp(*)
+
+  call CopyProvenanceDeposited(provp)
+
+  return
+
+end subroutine FastScape_Copy_Provenance_Deposited
+
+!--------------------------------------------------------------------------
+
+subroutine FastScape_Copy_Donor_Count(countp)
+
+  use FastScapeContext
+
+  implicit none
+
+  double precision, intent(out) :: countp(*)
+
+  call CopyDonorCount(countp)
+
+  return
+
+end subroutine FastScape_Copy_Donor_Count
