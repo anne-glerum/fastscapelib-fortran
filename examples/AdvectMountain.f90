@@ -10,8 +10,8 @@ program AdvectMountain
   ! n = 1 - Original implicit scheme; n =2 - FVM-TVD scheme
   implicit none
   
-  integer :: nx, ny, istep, nstep, i, j, idx
-  double precision :: xl, yl, dt, kfsed, m, n, kdsed, g, dx, x
+  integer :: nx, ny, istep, nstep
+  double precision :: xl, yl, dt, kfsed, m, n, kdsed, g
   double precision, dimension(:), allocatable :: h, u, chi, kf, kd, ux, uy
 
   ! Onitialize FastScape
