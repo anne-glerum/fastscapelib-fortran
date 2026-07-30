@@ -89,6 +89,7 @@ module FastScapeContext
     allocate (length(nn),a(nn),erate(nn),etot(nn),b(nn),Sedflux(nn),Fmix(nn),kf(nn),kd(nn))
     allocate (lake_depth(nn),hwater(nn),mrec(8,nn),mnrec(nn),mwrec(8,nn),mlrec(8,nn),mstack(nn))
     ! Provenance arrays: only enabled when ncomp was set before Setup.
+    ! Calling SetNComposition after Setup stops with an explanatory error.
     if (ncomp .gt. 0) then
       allocate(composition(nn))
       allocate(prov_flux(ncomp,nn))

@@ -23,10 +23,10 @@
 ! This routine must be called after FastScape_Setup.
 !
 ! Provenance routing is executed automatically by FastScape_Execute_Step
-! After stream-power erosion/deposition has calculated erate.
+! after stream-power erosion/deposition has calculated erate.
 ! For each eroding cell, sediment supply is:
 ! max(erate,0) * cell_area
-! and is routed downstream according to the FastScape flow-routing stack.
+! and this sediment is routed downstream according to the FastScape flow-routing stack.
 
 ! FastScape_SetUp ()
 ! Must be called to allocate memory for all internal arrays
@@ -34,7 +34,7 @@
 
 ! FastScape_Execute_Step ()
 ! Executes one timestep of the active FastScape processes.
-! When stream-power erosion is active, it also routes provenance using the
+! When the stream-power law is used, it also routes provenance using the
 ! erosion/deposition rate calculated during that timestep.
 
 ! FastScape_Destroy ()
@@ -137,21 +137,21 @@
 
 ! FastScape_Copy_Provenance_Delivered (provenance)
 ! Returns cumulative sediment volume delivered to every fixed-base-level node,
-! separated by source composition.
+! for each source composition.
 ! provenance is a double-precision array of size (ncomp,nn).
 ! provenance(c,i) is the cumulative volume (m3) of composition c delivered
 ! to grid cell i since the simulation began.
-!
+
 ! FastScape_Copy_Provenance_Deposited (provenance)
-! Returns cumulative sediment volume deposited at every grid cell, separated
-! by source composition.
+! Returns cumulative sediment volume deposited at every grid cell,
+! for each source composition.
 ! provenance is a double-precision array of size (ncomp,nn).
 ! provenance(c,i) is the cumulative deposited volume (m3) of composition c
 ! at grid cell i since the simulation began.
 !
 ! FastScape_Copy_Donor_Count (count)
 ! Returns the number of actively eroding donor cells draining toward every
-! grid cell during the latest timestep, separated by source composition.
+! grid cell during the latest timestep, for each source composition.
 ! count is a double-precision array of size (ncomp,nn).
 ! With multiple-flow-direction routing, donor counts can be fractional because
 ! sediment from one cell can be distributed to multiple receivers.

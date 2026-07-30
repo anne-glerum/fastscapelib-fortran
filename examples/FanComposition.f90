@@ -1,4 +1,4 @@
-program Fan
+program FanComposition
 
   ! Provenance test: alluvial fan sourced from a two-composition plateau
   !
@@ -16,13 +16,14 @@ program Fan
 
   implicit none
 
-  integer :: nx,ny,istep,nstep,nn,ibc
+  integer :: nx,ny,istep,nstep,nn,ibc, nseed
   double precision, dimension(:), allocatable :: h,x,y,kf,kd,b,u
   real :: time_in,time_out
   double precision :: kfsed,m,n,kdsed,g1,g2,expp
   double precision xl,yl,dt,pi,vex,x1,y1
   integer, dimension(:), allocatable :: comp
   integer i,j
+  integer, allocatable :: seed(:)
 
   ! set model resolution
   nx = 101
@@ -34,7 +35,7 @@ program Fan
   ! initialize FastScape
   call FastScape_Init ()
   call FastScape_Set_NX_NY (nx,ny)
-  ! set number of composition
+  ! set number of compositions
   call FastScape_Set_NComposition(2)
   call FastScape_Setup ()
 
@@ -47,14 +48,15 @@ program Fan
   allocate (x(nx*ny),y(nx*ny))
   x = (/((xl*float(i-1)/(nx-1), i=1,nx),j=1,ny)/)
   y = (/((yl*float(j-1)/(ny-1), i=1,nx),j=1,ny)/)
-
+  ! set the composition
   allocate(comp(nx*ny))
 
   do j = 1, ny
     do i = 1, nx
-
+    ! compute the value of the x-coordinate
       x1 = dble(i-1)*xl/dble(nx-1)
 
+      ! set composition 1 on the left side of the domain, and 2 on the right
       if (x1 .lt. 5.d3) then
         comp(i+(j-1)*nx) = 1
       else
@@ -74,9 +76,9 @@ program Fan
 
   do j = 1, ny
     do i = 1, nx
-
+      ! compute value of y-coordinate
       y1 = dble(j-1)*yl/dble(ny-1)
-
+      ! prescribe uplift on northern part of the domain
       if (y1 .ge. 10.d3) then
         u(i+(j-1)*nx) = 2.d-3
       else
@@ -86,10 +88,10 @@ program Fan
     enddo
   enddo
 
-  call FastScape_Set_U(u)
   ! Boundary conditions
   u(1:nx)=0.d0
   call FastScape_Set_U(u)
+
   ! we make the sediment slightly more easily erodible
   allocate (kf(nn),kd(nn))
   kf=1.d-4
@@ -109,16 +111,20 @@ program Fan
 
   ! initial topography is a 1000 m high plateau
   allocate(h(nn),b(nn))
-
+  call random_seed(size=nseed)
+  allocate(seed(nseed))
+  seed = 12345
+  call random_seed(put=seed)
   call random_number(h)
-  h = 0.1d0*(h-0.5d0)
+  deallocate(seed)
+  h = 0.1d0*(h-0.5d0) ! Rescaling random topography
 
   do j = 1, ny
     do i = 1, nx
-
+      ! compute value of y-coordinate
       y1 = dble(j-1)*yl/dble(ny-1)
 
-      ! Regional slope: high in the north, low at the fixed southern outlet.
+      ! Constant regional southward slope of 0.01: elevation increases linearly from the southern outlet toward the north.
       h(i+(j-1)*nx) = h(i+(j-1)*nx) + 0.01d0*y1
 
       ! Smooth 1 km plateau above y = 10 km.
@@ -157,7 +163,7 @@ program Fan
     call FastScape_Copy_H (h)
     call FastScape_Copy_Basement (b)
     call FastScape_VTK (h-b, vex)
-    call Fastscape_Provenance_VTK(2.d0, istep)
+    call Fastscape_Provenance_VTK(2.d0, istep) ! 2.d0 is the vertical exaggeration
 
   enddo
 
@@ -172,5 +178,5 @@ program Fan
   ! deallocate memory
   deallocate(h,x,y,kf,kd,b,u,comp)
 
-end program Fan
+end program FanComposition
 
