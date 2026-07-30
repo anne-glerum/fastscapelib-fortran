@@ -94,3 +94,88 @@ subroutine Fastscape_Named_VTK (f, vex, istep, foldername, k)
 
     return
   end subroutine Fastscape_Named_VTK
+
+!--------------------------------------------------------------------------------------------
+
+subroutine Fastscape_Provenance_VTK(vex, istep)
+
+  use FastScapeContext
+
+  implicit none
+
+  integer, intent(in) :: istep
+  integer :: c, i, nf, ifield
+  double precision, intent(in) :: vex
+  double precision :: dx, dy, total_deposition
+
+  double precision, allocatable :: hplot(:,:)
+  double precision, allocatable :: fields_prov(:,:,:)
+  double precision, allocatable :: deposited_fraction(:,:)
+  character(len=32), allocatable :: names(:)
+
+  if (ncomp .eq. 0) return
+
+  dx = xl/(nx-1)
+  dy = yl/(ny-1)
+
+  ! One source-composition field, plus four fields_prov per composition.
+  nf = 1 + 4*ncomp
+
+  allocate(hplot(nx,ny))
+  allocate(fields_prov(nx,ny,nf))
+  allocate(deposited_fraction(ncomp,nn))
+  allocate(names(nf))
+
+  hplot = reshape(h, (/nx,ny/))
+  deposited_fraction = 0.d0
+
+  ! Calculate relative composition of deposited sediment.
+  do i = 1, nn
+    total_deposition = sum(prov_deposited(:,i))
+
+    if (total_deposition .gt. 0.d0) then
+      deposited_fraction(:,i) = prov_deposited(:,i) / total_deposition
+    endif
+  enddo
+
+  ! Field 1: initial source composition map.
+  ! This field is static through time.
+  ifield = 1
+  fields_prov(:,:,ifield) = reshape(dble(composition), (/nx,ny/))
+  names(ifield) = 'Source_composition'
+
+  do c = 1, ncomp
+
+    ! Sediment moving through the grid during this timestep.
+    ifield = ifield + 1
+    fields_prov(:,:,ifield) = reshape(prov_flux(c,:), (/nx,ny/))
+    write(names(ifield),'("Transported_comp_",I4.4)') c
+
+    ! Cumulative deposited sediment volume.
+    ifield = ifield + 1
+    fields_prov(:,:,ifield) = reshape(prov_deposited(c,:), (/nx,ny/))
+    write(names(ifield),'("Deposited_comp_",I4.4)') c
+
+    ! Relative contribution of this composition to local deposits.
+    ifield = ifield + 1
+    fields_prov(:,:,ifield) = reshape(deposited_fraction(c,:), (/nx,ny/))
+    write(names(ifield),'("Deposit_fraction_",I4.4)') c
+
+    ! Cumulative sediment delivered to base/outlet cells.
+    ifield = ifield + 1
+    fields_prov(:,:,ifield) = reshape(prov_delivered(c,:), (/nx,ny/))
+    write(names(ifield),'("Delivered_comp_",I4.4)') c
+
+  enddo
+
+  call VTK(hplot, 'TopographyProvenance-', nf, fields_prov, names, &
+    nx, ny, dx, dy, istep, vex)
+
+  deallocate(hplot)
+  deallocate(fields_prov)
+  deallocate(deposited_fraction)
+  deallocate(names)
+
+  return
+
+end subroutine Fastscape_Provenance_VTK
