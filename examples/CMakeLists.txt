@@ -7,6 +7,7 @@ set(FASTSCAPELIB_EXAMPLES_SRC_FILES
   Mountain.f90
   Strati_test.f90
   flexure_test.f90
+  MarineDiffusionRotation.f90
   )
 
 foreach(EXAMPLE_SRC_FILE ${FASTSCAPELIB_EXAMPLES_SRC_FILES})
