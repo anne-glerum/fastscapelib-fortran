@@ -23,7 +23,7 @@ set(FASTSCAPELIB_SRC_FILES
   ${FASTSCAPELIB_SRC_DIR}/Uplift.f90
   ${FASTSCAPELIB_SRC_DIR}/VTK.f90
   ${FASTSCAPELIB_SRC_DIR}/TerrainDerivatives.f90
-  ${FASTSCAPELIB_SRC_DIR}/Named_VTK.f90
+  ${FASTSCAPELIB_SRC_DIR}/WriteVisualization.f90
   )
 
 set(FLEXURE_SRC_DIR Flexure2D_v1.0/src)
@@ -81,6 +81,9 @@ endif()
 set_source_files_properties(${FLEXURE_SRC_DIR}/four1.f PROPERTIES COMPILE_FLAGS ${f77flags})
 set_source_files_properties(${FLEXURE_SRC_DIR}/realft.f PROPERTIES COMPILE_FLAGS ${f77flags})
 set_source_files_properties(${FLEXURE_SRC_DIR}/sinft.f PROPERTIES COMPILE_FLAGS ${f77flags})
+
+# Flag to allow the use of convert="big_endian" for visualization.
+set_source_files_properties(${FASTSCAPELIB_SRC_DIR}/WriteVisualization.f90 PROPERTIES COMPILE_FLAGS "-std=gnu")
 
 # Build options
 # =============
